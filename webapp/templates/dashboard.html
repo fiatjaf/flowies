@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% macro setapp(wfshid, name, fields, presetdata={}) -%}
+  <form action="/set-app/{{ wfshid }}/{{ name }}" method="POST" class="form-horizontal">
+    <fieldset>
+      <legend>{{ name }}</legend>
+        {% for field, info in appfields[name].items() %}
+          <div class="control-group">
+            <label class="control-label">{{ field }}: </label>
+            <div class="controls">
+              <input type="text" name="{{ field }}" placeholder="{{ info.placeholder }}"
+                     value="{{ presetdata[field] }}">
+              <span class="help-block">{{ info.help | safe }}</span>
+            </div>
+          </div>
+        {% endfor %}
+        {% if presetdata %}
+          <button class="btn btn-inverse" style="display: block; margin: auto">Set</button>
+        {% else %}
+          <button class="btn btn-success" style="display: block; margin: auto">Add</button>
+        {% endif %}
+    </fieldset>
+  </form>
+{%- endmacro  %}
+
+{% block content %}
+
+  <div class="container-fluid">
+    <style>
+.nav-tabs a small {
+  color: grey;
+}
+.tabcontent {
+  display: none;
+}
+.tabcontent:target {
+  display: block;
+}
+
+/* FAILS ON MOBILE */
+.section-new > div {
+  display: none;
+}
+.section-new:hover > div {
+  display: block;
+}
+    </style>
+    <div class="row-fluid">
+      <ul class="nav nav-tabs wfitems">
+        {% for sharedid, data in wfitems.items() %}
+          <li>
+            <a href="#{{ sharedid }}">{{ data.name }}<small> #{{ sharedid }}</a></small>
+          </li>
+        {% endfor %}
+        <li>
+          <a href="#add-new">Add new shared Workflowy project</a>
+        </li>
+      </ul>
+      {% for sharedid, data in wfitems.items() %}
+        <div class="tabcontent" id="{{ sharedid }}">
+          <div class="row-fluid">
+            <div class="span8">
+              <h4><a href="https://workflowy.com/s/{{ sharedid }}" target="_blank">{{ data.name }}</a></h5>
+            </div>
+            <div class="span4">
+              <p>Last updated on {{ data.last_updated }}</p>
+            </div>
+          </div>
+          <h3>Apps</h3>
+          {% for app, settings in data.apps.items() %}
+            {{ setapp(sharedid, app, appfields[app], settings) }}
+            <hr>
+          {% endfor %}
+          <div class="section-new">
+            <h4>Add new app</h4>
+            <div>
+              <ul class="nav nav-pills new-apps">
+                {% for app in appfields if app not in data.apps %}
+                  <li><a style="cursor:pointer">{{ app }}</a></li>
+                {% endfor %}
+              </ul>
+              {% for app in appfields if app not in data.apps %}
+                <div>
+                  {{ setapp(sharedid, app, appfields[app]) }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      <div class="tabcontent" id="add-new">
+        <div class="row-fluid">
+          <div class="span6">
+            <form action="/setup" method="/post">
+              <fieldset>
+                <legend>Add a new Workflowy project</legend>
+                <div class="control-group">
+                  <label class="control-label">Workflowy shared URL: </label>
+                  <input type="text" placeholder="https://workflowy.com/s/cqFyu4cFba" name="wfitem">
+                </div>
+                <button type="submit" style="display: block; margin: auto;" class="btn btn-inverse">Add</button>
+              </fieldset>
+            </form>
+          </div>
+          <div class="span6">
+            <p></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="row-fluid">
+      <div class="span12">
+        <p>Our database is only updated every 3 hours, so don't be in a hurry and don't think something is wrong if your updates do not appear immediately. We are part of the <a href="http://theslowweb.com/" target="_blank">Slow Web</a> Movement, which fits well for <em>flowi.es</em> apps.</p>
+      </div>
+    </div>
+    <script>
+var as = document.querySelectorAll('.wfitems > li > a')
+for (var i = 0; i < as.length; i++) {
+  var a = as[i]
+  a.addEventListener('click', function (e) {
+    for (var j = 0; j < as.length; j++) {
+      as[j].parentNode.classList.remove('active')
+    }
+    var li = e.target.parentNode
+    li = li.tagName == 'A' ? li.parentNode : li
+    li.classList.add('active')
+  })
+}
+var target = document.querySelector('[href="' + location.hash + '"]')
+if (target) {
+  target.parentNode.classList.add('active')
+} else {
+  target = document.querySelector('.wfitems > li > a')
+  target.parentNode.classList.add('active')
+  location.hash = target.getAttribute('href')
+}
+    </script>
+  </div>
+
+{% endblock %}

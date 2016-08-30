@@ -1,0 +1,8 @@
+venv
+*.pyo
+*.pyc
+*.swp
+*.swo
+*.env
+cron.log
+prod.env
