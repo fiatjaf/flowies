@@ -71,6 +71,9 @@
           <h3>Apps</h3>
           {% for app, settings in data.apps.items() %}
             {{ setapp(sharedid, app, appfields[app], settings) }}
+            {% if app == 'sites' and data.last_updated and settings.domain %}
+              <p>Visit it at <a href="https://{{ settings.domain }}.on.flowi.es/">https://{{ settings.domain }}.on.flowi.es/</a>.</p>
+            {% endif %}
             <hr>
           {% endfor %}
           <div class="section-new">
