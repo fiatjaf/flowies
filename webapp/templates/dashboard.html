@@ -63,7 +63,9 @@
               <h4><a href="https://workflowy.com/s/{{ sharedid }}" target="_blank">{{ data.name }}</a></h5>
             </div>
             <div class="span4">
-              <p>Last updated on {{ data.last_updated }}</p>
+              {% if data.last_updated %}
+                <p>Last updated on {{ data.last_updated }}</p>
+              {% endif %}
             </div>
           </div>
           <h3>Apps</h3>
@@ -91,7 +93,7 @@
       <div class="tabcontent" id="add-new">
         <div class="row-fluid">
           <div class="span6">
-            <form action="/setup" method="/post">
+            <form action="/setup" method="POST">
               <fieldset>
                 <legend>Add a new Workflowy project</legend>
                 <div class="control-group">

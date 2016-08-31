@@ -25,34 +25,37 @@ def index():
 
 @app.route('/setup', methods=['POST'])
 def setup():
-    username = request.form['username'].strip()
-    password = request.form['password'].strip()
-    wfitem = request.form.get('wfitem', '').strip()
-    if re.search('[^\d\w_-]', username):
-        flash('Username contains invalid characters.')
-        return redirect(url_for('index', wfitem=wfitem, username=username))
-    if not (username and password):
-        flash('Missing information.')
-        return redirect(url_for('index', wfitem=wfitem, username=username))
-
     # wfitem identifier may be a full shared URL
+    wfitem = request.form.get('wfitem', '').strip()
     if wfitem.startswith('http'):
         wfitem = [p for p in wfitem.split('/') if p][-1]
 
-    # try to fetch user already registered
-    try:
-        user = User.from_name_password(username, password)
-    except WrongPassword:
-        # user is registered, but with a different password
-        flash('This username is already taken.')
-        return redirect(url_for('index', wfitem=wfitem))
+    global current_user
+    if not current_user.is_authenticated:
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+        if re.search('[^\d\w_-]', username):
+            flash('Username contains invalid characters.')
+            return redirect(url_for('index', wfitem=wfitem, username=username))
+        if not (username and password):
+            flash('Missing information.')
+            return redirect(url_for('index', wfitem=wfitem, username=username))
 
-    # register user if not
-    if not user:
-        user = User(username)
-        user.save(password)
+        # try to fetch user already registered
+        try:
+            user = User.from_name_password(username, password)
+        except WrongPassword:
+            # user is registered, but with a different password
+            flash('This username is already taken.')
+            return redirect(url_for('index', wfitem=wfitem))
 
-    login_user(user, remember=True)
+        # register user if not
+        if not user:
+            user = User(username)
+            user.save(password)
+
+        login_user(user, remember=True)
+        current_user = user
 
     # register wfitem / add user to it
     if wfitem:
@@ -64,8 +67,10 @@ def setup():
         else:
             return r.text, 503
 
-        doc['users'][user.name] = {'apps': {}}
+        doc['users'][current_user.name] = {'apps': {}}
+        print(doc)
         r = requests.put(COUCHDB_URL + '/' + wfitem, data=json.dumps(doc))
+        print(r.text)
         if not r.ok:
             return r.text, 503
 
@@ -192,12 +197,12 @@ class User():
             last_updated = datetime.datetime.strptime(
                 row['key'][3].split('.')[0],
                 '%Y-%m-%dT%H:%M:%S'
-            )
+            ).strftime('%c') if row['key'][3] else None
             apps = row['value']
             wfitems[wfid] = {
                 'name': wfname,
                 'apps': apps,
-                'last_updated': last_updated.strftime('%c')
+                'last_updated': last_updated
             }
         return wfitems
 
