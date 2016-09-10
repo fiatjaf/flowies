@@ -26,7 +26,7 @@ def process(wfshid, hash=None):
     newhash = md5(json.dumps(root, sort_keys=True).encode('utf-8')).hexdigest()
     print('newhash', newhash)
     if hash and hash == newhash:
-        print('have not changed.\n')
+        print('has not changed.\n')
         return
 
     r = requests.put(COUCHDB_URL + '/_design/apps/_update/update-data/' +

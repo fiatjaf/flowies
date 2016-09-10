@@ -59,12 +59,12 @@
       {% for sharedid, data in wfitems.items() %}
         <div class="tabcontent" id="{{ sharedid }}">
           <div class="row-fluid">
-            <div class="span8">
+            <div class="span7">
               <h4><a href="https://workflowy.com/s/{{ sharedid }}" target="_blank">{{ data.name }}</a></h5>
             </div>
-            <div class="span4">
+            <div class="span5">
               {% if data.last_updated %}
-                <p>Last updated on {{ data.last_updated }}</p>
+                <span class="label label-info">Last updated on {{ data.last_updated }}</span>
               {% endif %}
             </div>
           </div>
@@ -72,7 +72,14 @@
           {% for app, settings in data.apps.items() %}
             {{ setapp(sharedid, app, appfields[app], settings) }}
             {% if app == 'sites' and data.last_updated and settings.domain %}
-              <p>Visit it at <a href="https://{{ settings.domain }}.on.flowi.es/">https://{{ settings.domain }}.on.flowi.es/</a>.</p>
+              <p>Visit it at <a href="http://{{ settings.domain }}.on.flowi.es/">http://{{ settings.domain }}.on.flowi.es/</a>.</p>
+            {% elif app == 'reminders' %}
+              <table class="table table-condensed">
+              <b>Next reminders</b>
+              {% for d, name in nextreminders %}
+                <tr><td>{{ d.strftime('%b %d %Y') }}</td><td>{{ name }}</td></tr>
+              {% endfor %}
+              </table>
             {% endif %}
             <hr>
           {% endfor %}

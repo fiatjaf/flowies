@@ -137,8 +137,24 @@ def logout():
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
+    today = datetime.date.today()
+    res = requests.get(
+        COUCHDB_URL + '/_design/reminders/_view/next-by-user',
+        params={
+            'startkey': json.dumps([
+                current_user.name, today.year, today.month, today.day]),
+            'endkey': json.dumps([current_user.name, {}]),
+            'limit': 5
+        }
+    ).json()
+    nextreminders = [(
+        datetime.date(*row['key'][1:]),
+        row['value']
+    ) for row in res['rows']]
+
     return render_template('dashboard.html',
                            wfitems=current_user.get_wfitems(),
+                           nextreminders=nextreminders,
                            appfields=appfields)
 
 

@@ -15,7 +15,7 @@ fields = {
     'domain': {
       'placeholder': 'mysite',
       'help': 'Any value. Your site will be served at '
-              'https://&lt;domain&gt;.on.flowi.es/'
+              'http://&lt;domain&gt;.on.flowi.es/'
     }
   }
 }
