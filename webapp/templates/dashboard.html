@@ -36,14 +36,6 @@
 .tabcontent:target {
   display: block;
 }
-
-/* FAILS ON MOBILE */
-.section-new > div {
-  display: none;
-}
-.section-new:hover > div {
-  display: block;
-}
     </style>
     <div class="row-fluid">
       <ul class="nav nav-tabs wfitems">
@@ -83,9 +75,9 @@
             {% endif %}
             <hr>
           {% endfor %}
-          <div class="section-new">
-            <h4>Add new app</h4>
-            <div>
+          <div class="section-new text-center">
+            <button class="btn btn-primary btn-info">Add new app</button>
+            <div style="display: none">
               <ul class="nav nav-pills new-apps">
                 {% for app in appfields if app not in data.apps %}
                   <li><a style="cursor:pointer">{{ app }}</a></li>
@@ -100,6 +92,23 @@
           </div>
         </div>
       {% endfor %}
+      <script>
+var buttons = document.querySelectorAll('.section-new > button')
+for (var i = 0; i < buttons.length; i++) {
+  buttons[i].addEventListener('click', function (e) {
+    e.preventDefault()
+    var button = e.target
+    var section = button.nextElementSibling
+    if (section.style.display === 'block') {
+      section.style.display = 'none'
+      button.classList.remove('active')
+    } else {
+      section.style.display = 'block'
+      button.classList.add('active')
+    }
+  })
+}
+      </script>
       <div class="tabcontent" id="add-new">
         <div class="row-fluid">
           <div class="span6">
