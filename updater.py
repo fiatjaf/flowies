@@ -2,8 +2,9 @@ import os
 import sys
 import json
 import requests
+import datetime
 from hashlib import md5
-from wfapi import Workflowy
+from wfapi import Workflowy, error
 
 
 COUCHDB_URL = os.environ['COUCHDB_URL']
@@ -18,15 +19,20 @@ def main():
 
 
 def process(wfshid, hash=None):
-    print('processing', wfshid, 'hash', hash)
+    print(datetime.datetime.now(), 'processing', wfshid, 'hash', hash)
 
-    wf = Workflowy(wfshid)
+    try:
+        wf = Workflowy(wfshid)
+    except error.WFLoginError:
+        print('login error.')
+        return
+
     root = build(wf.root)
 
     newhash = md5(json.dumps(root, sort_keys=True).encode('utf-8')).hexdigest()
     print('newhash', newhash)
     if hash and hash == newhash:
-        print('has not changed.\n')
+        print("hasn't changed.\n")
         return
 
     r = requests.put(COUCHDB_URL + '/_design/apps/_update/update-data/' +

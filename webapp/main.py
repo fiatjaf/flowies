@@ -7,6 +7,8 @@ import datetime
 from flask import Flask, request, render_template, flash, redirect, url_for
 from flask_login import LoginManager, current_user, \
                         login_user, logout_user, login_required
+from prettydate import date as prettydate
+
 from apps import fields as appfields
 
 app = Flask(__name__)
@@ -210,10 +212,9 @@ class User():
         for row in r.json()['rows']:
             wfid = row['key'][1]
             wfname = row['key'][2]
-            last_updated = datetime.datetime.strptime(
-                row['key'][3].split('.')[0],
-                '%Y-%m-%dT%H:%M:%S'
-            ).strftime('%c') if row['key'][3] else None
+            last_updated = prettydate(datetime.datetime.fromtimestamp(
+                row['key'][3] / 1000,
+            )) if row['key'][3] else None
             apps = row['value']
             wfitems[wfid] = {
                 'name': wfname,
