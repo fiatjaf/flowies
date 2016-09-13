@@ -33,7 +33,7 @@ def send_reminder(name, note, url, target):
         'from': 'Workflowy Item Reminder <reminder@%s>' % (DOMAIN),
         'to': target,
         'subject': '"%s" is due today' % (name),
-        'text': '''Workflowy item due today: "{name}"
+        'text': '''Workflowy item due today:
 
 {name} {url}
 
