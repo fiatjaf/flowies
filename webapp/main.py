@@ -212,9 +212,12 @@ class User():
         for row in r.json()['rows']:
             wfid = row['key'][1]
             wfname = row['key'][2]
-            last_updated = prettydate(datetime.datetime.fromtimestamp(
-                row['key'][3] / 1000,
-            )) if row['key'][3] else None
+            try:
+                last_updated = prettydate(datetime.datetime.fromtimestamp(
+                    row['key'][3] / 1000,
+                )) if row['key'][3] else None
+            except TypeError:  # date is in iso-string format, not timestamp.
+                last_updated = row['key'][3]
             apps = row['value']
             wfitems[wfid] = {
                 'name': wfname,
