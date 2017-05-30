@@ -1,23 +1,26 @@
-import os
 import re
 import json
 import bcrypt
 import requests
 import datetime
-from flask import Flask, request, render_template, flash, redirect, url_for
+from flask import Flask, request, render_template, flash, redirect, \
+                  render_template_string, url_for
 from flask_login import LoginManager, current_user, \
                         login_user, logout_user, login_required
 from prettydate import date as prettydate
 
+import settings
+from apps import email
 from apps import fields as appfields
 
 app = Flask(__name__)
 
-PORT = os.getenv('PORT', '5000')
-COUCHDB_URL = os.getenv('COUCHDB_URL')
-REMEMBER_COOKIE_NAME = 'rmeflowies'
-app.config.from_object(__name__)
-app.secret_key = os.getenv('SECRET', 'whiplash')
+app.config.from_object(settings)
+
+
+@app.template_filter('subrender')
+def subrender(s, **ctx):
+    return render_template_string(s, **ctx)
 
 
 @app.route('/')
@@ -61,7 +64,7 @@ def setup():
 
     # register wfitem / add user to it
     if wfitem:
-        r = requests.get(COUCHDB_URL + '/' + wfitem)
+        r = requests.get(settings.COUCHDB_URL + '/' + wfitem)
         if r.status_code == 404:
             doc = {'_id': wfitem, 'users': {}}
         elif r.ok:
@@ -71,7 +74,8 @@ def setup():
 
         doc['users'][current_user.name] = {'apps': {}}
         print(doc)
-        r = requests.put(COUCHDB_URL + '/' + wfitem, data=json.dumps(doc))
+        r = requests.put(
+            settings.COUCHDB_URL + '/' + wfitem, data=json.dumps(doc))
         print(r.text)
         if not r.ok:
             return r.text, 503
@@ -94,10 +98,11 @@ def set_app(wfshid, appname):
                 return redirect(url_for('dashboard'))
             data[field] = request.form[field]
 
-    r = requests.post(COUCHDB_URL + '/_design/apps/_update/set-app/' + wfshid,
-                      data=json.dumps({'appdata': data,
-                                       'appname': appname,
-                                       'username': current_user.name}))
+    r = requests.post(
+        settings.COUCHDB_URL + '/_design/apps/_update/set-app/' + wfshid,
+        data=json.dumps({'appdata': data,
+                         'appname': appname,
+                         'username': current_user.name}))
 
     if not r.ok:
         flash(r.text)
@@ -141,7 +146,7 @@ def logout():
 def dashboard():
     today = datetime.date.today()
     res = requests.get(
-        COUCHDB_URL + '/_design/reminders/_view/next-by-user',
+        settings.COUCHDB_URL + '/_design/reminders/_view/next-by-user',
         params={
             'startkey': json.dumps([
                 current_user.name, today.year, today.month, today.day]),
@@ -160,6 +165,10 @@ def dashboard():
                            appfields=appfields)
 
 
+# app-specific routes
+app.add_url_rule('/email/webhook', 'email', email.webhook, methods=['POST'])
+
+
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please login to access this page.'
@@ -176,7 +185,7 @@ def load_user(id):
 class User():
     @classmethod
     def from_name_password(cls, name, password):
-        r = requests.get(COUCHDB_URL + '/users~' + name)
+        r = requests.get(settings.COUCHDB_URL + '/users~' + name)
         if not r.ok:
             print(r.text)
             return None
@@ -195,15 +204,18 @@ class User():
     def save(self, password):
         password = password.encode('utf-8')
         hashedpw = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
-        r = requests.put(COUCHDB_URL + '/users~' + self.name, data=json.dumps({
-            '_id': 'users~' + self.name,
-            'password': hashedpw
-        }))
+        r = requests.put(
+            settings.COUCHDB_URL + '/users~' + self.name,
+            data=json.dumps({
+                '_id': 'users~' + self.name,
+                'password': hashedpw
+            })
+        )
         print(r.text)
 
     def get_wfitems(self):
         wfitems = {}
-        r = requests.get(COUCHDB_URL + '/_design/apps/_view/apps',
+        r = requests.get(settings.COUCHDB_URL + '/_design/apps/_view/apps',
                          params={'startkey': json.dumps([self.name]),
                                  'endkey': json.dumps([self.name, {}])})
         if not r.ok:
@@ -244,4 +256,4 @@ class WrongPassword(Exception):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(PORT), debug=True)
+    app.run(host='0.0.0.0', port=settings.PORT, debug=True)

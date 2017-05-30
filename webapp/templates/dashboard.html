@@ -8,9 +8,9 @@
           <div class="control-group">
             <label class="control-label">{{ field }}: </label>
             <div class="controls">
-              <input type="text" name="{{ field }}" placeholder="{{ info.placeholder }}"
-                     value="{{ presetdata[field] }}">
-              <span class="help-block">{{ info.help | safe }}</span>
+              <input type="text" name="{{ field }}" placeholder="{{ info.placeholder | subrender }}"
+                     value="{{ presetdata[field] or info.default | subrender }}">
+              <span class="help-block">{{ info.help | subrender | safe }}</span>
             </div>
           </div>
         {% endfor %}
