@@ -1,0 +1,14 @@
+{
+  "_id": "_design/reminders",
+  "name": "workflowy reminders",
+  "views": {
+    "dates": {
+      "map": "function (doc) {\n\tif (!Object.keys(doc.users).length) return\n\n  function inspect (node, target) {\n    ((node.name || '') + ' ' + (node.note || '')).replace(/\\d\\d\\d\\d\\d\\d\\d\\d/g, function (m) {\n      var year = parseInt(m.slice(0, 4), 10)\n      var month = parseInt(m.slice(4, 6), 10)\n      var day = parseInt(m.slice(6, 8), 10)\n\n\t\t\temit([year, month, day], {id: node.id, name: node.name, note: node.note, target: target})\n    })\n\n    for (var c = 0; c < node.children.length; c++) {\n      var child = node.children[c]\n      inspect(child, target)\n    }\n  }\n\n\tfor (var user in doc.users) {\n\t\tif (doc.users[user].apps.reminders) {\n\t\t  var target = doc.users[user].apps.reminders.to\n      inspect(doc.root, target)\n\t\t}\n\t}\n}"
+    },
+    "next-by-user": {
+      "map": "function (doc) {\n\tif (!Object.keys(doc.users).length) return\n\n  function inspect (node, target) {\n    ((node.name || '') + ' ' + (node.note || '')).replace(/\\d\\d\\d\\d\\d\\d\\d\\d/g, function (m) {\n      var year = parseInt(m.slice(0, 4), 10)\n      var month = parseInt(m.slice(4, 6), 10)\n      var day = parseInt(m.slice(6, 8), 10)\n\n\t\t\tfor (var user in doc.users) {\n\t\t\t\temit([user, year, month, day], node.name)\n\t\t\t}\n    })\n\n    for (var c = 0; c < node.children.length; c++) {\n      var child = node.children[c]\n      inspect(child, target)\n    }\n  }\n\n\tfor (var user in doc.users) {\n\t\tif (doc.users[user].apps.reminders) {\n\t\t  var target = doc.users[user].apps.reminders.to\n      inspect(doc.root, target)\n\t\t}\n\t}\n}"
+    }
+  },
+  "_attachments": {
+  }
+}

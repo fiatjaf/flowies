@@ -1,0 +1,7 @@
+# workflowy apps
+#   log cleaner
+  4    4    */3  *   *    date > /home/fiatjaf/comp/workflowy-apps/cron.log
+#   updater
+ 20   */3    *   *   *    /home/fiatjaf/comp/go/bin/godotenv -f /home/fiatjaf/comp/workflowy-apps/prod.env /home/fiatjaf/comp/workflowy-apps/venv/bin/python /home/fiatjaf/comp/workflowy-apps/updater.py >> /home/fiatjaf/comp/workflowy-apps/cron.log 2>&1
+#   send reminders
+ 40    6     *   *   *    /home/fiatjaf/comp/go/bin/godotenv -f /home/fiatjaf/comp/workflowy-apps/prod.env /home/fiatjaf/comp/workflowy-apps/venv/bin/python /home/fiatjaf/comp/workflowy-apps/reminder/send-reminders.py 2>&1

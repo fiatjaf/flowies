@@ -1,0 +1,15 @@
+{
+  "_id": "_design/apps",
+  "name": "workflowy apps",
+  "updates": {
+    "set-app": "function (doc,req) {\n  var data = JSON.parse(req.body)\n\n\tif (!data.username || !data.appname) {\n\t\treturn [null, {code: 400, body: 'Missing arguments.'}]\n\t}\n\t\n  if (!doc) {\n\t\treturn [null, {code: 404, body: 'Workflowy project not registered'}]\n  }\n\t\n\tif (!doc.users[data.username]) {\n\t\treturn [null, {code: 403, body: 'You do not have access to this Workflowy project.'}]\n\t}\n\n\tif (Object.keys(data.appdata).length === 0) {\n\t  delete doc.users[data.username].apps[data.appname]\n\t} else {\n  \tdoc.users[data.username].apps[data.appname] = data.appdata\n\t}\n\n  return [doc, 'Success!']\n}",
+    "update-data": "function (doc,req) {\n  var root = JSON.parse(req.body)\n\tvar hash = req.query.hash\n\t\n\tdoc.last_updated = (new Date()).getTime()\n\tdoc.root = root\n\tdoc.hash = hash\n\n\treturn [doc, 'Ok.']\n}"
+  },
+  "views": {
+    "apps": {
+      "map": "function (doc) {\n\tif (!doc.users) return\n\n\tfor (var user in doc.users) {\n    emit([\n\t\t\tuser,\n\t\t\tdoc._id,\n\t\t\tdoc.root ? doc.root.name : '[pending Workflowy project]',\n\t\t\tdoc.last_updated,\n\t\t\tdoc.hash\n\t\t], doc.users[user].apps)\n\t}\n}"
+    }
+  },
+  "_attachments": {
+  }
+}

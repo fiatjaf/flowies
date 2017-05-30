@@ -1,0 +1,11 @@
+{
+  "_id": "_design/email",
+  "name": "workflowy email",
+  "views": {
+    "incoming": {
+      "map": "function (doc) {\n\tif (!doc.users) return\n\n\tfor (var user in doc.users) {\n    if (doc.users[user].apps.email) {\n\t\t  var alias = doc.users[user].apps.email.alias\n\t\t\tvar from = doc.users[user].apps.email.from\n      emit(alias, from)\n\t\t}\n\t}\n}"
+    }
+  },
+  "_attachments": {
+  }
+}
